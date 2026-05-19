@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediTrain — Clinical Diagnosis Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0f11;--bg2:#16181c;--bg3:#1e2126;
+  --surface:#23272f;--surface2:#2a2f38;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --text:#f0eee8;--text2:#9a9790;--text3:#5e5c58;
+  --red:#e05c4b;--red-dim:rgba(224,92,75,.15);
+  --amber:#e8a830;--amber-dim:rgba(232,168,48,.12);
+  --blue:#4a9eda;--blue-dim:rgba(74,158,218,.12);
+  --green:#4caf7d;--green-dim:rgba(76,175,125,.12);
+  --purple:#9b7fe8;--purple-dim:rgba(155,127,232,.12);
+  --radius:14px;
+  --font:'DM Sans',sans-serif;
+  --serif:'Fraunces',serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* WELCOME */
+#sw{align-items:center;justify-content:center;padding:2rem;
+  background:radial-gradient(ellipse at 25% 20%,rgba(155,127,232,.09) 0%,transparent 55%),
+             radial-gradient(ellipse at 80% 80%,rgba(74,158,218,.07) 0%,transparent 50%),var(--bg)}
+.ww{max-width:400px;width:100%}
+.logo-row{display:flex;align-items:center;gap:.75rem;margin-bottom:2.5rem}
+.logo-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:#fff;font-size:18px;font-weight:600}
+.logo-row h1{font-family:var(--serif);font-size:1.4rem;font-weight:300}
+.logo-row h1 em{font-style:italic;color:var(--text2)}
+.welcome-hero{margin-bottom:2rem}
+.welcome-hero h2{font-family:var(--serif);font-size:2.3rem;font-weight:300;line-height:1.2;margin-bottom:.5rem}
+.welcome-hero h2 em{font-style:italic;color:var(--purple)}
+.welcome-hero p{font-size:14px;color:var(--text2);line-height:1.6}
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:1.75rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem}
+.field input{width:100%;padding:.75rem 1rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-family:var(--font);font-size:15px;color:var(--text);outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--purple)}
+.field input::placeholder{color:var(--text3)}
+.btn-primary{width:100%;padding:.85rem;margin-top:.5rem;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;font-family:var(--font);font-size:15px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.welcome-note{margin-top:1.25rem;text-align:center;font-size:12px;color:var(--text3);line-height:1.5}
+
+/* TOP BAR */
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.75rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:.6rem}
+.brand-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-family:var(--serif);color:#fff;font-size:13px;font-weight:600}
+.brand-name{font-family:var(--serif);font-size:1.1rem;font-weight:300}
+.top-bar-right{display:flex;align-items:center;gap:.75rem}
+.student-pill{display:flex;align-items:center;gap:.5rem;background:var(--surface);border:1px solid var(--border);padding:.35rem .85rem;border-radius:99px;font-size:13px;color:var(--text2)}
+.student-pill strong{color:var(--text);font-weight:500}
+.db-status{display:flex;align-items:center;gap:.4rem;font-size:11px;color:var(--text3)}
+.db-dot{width:7px;height:7px;border-radius:50%;background:var(--text3)}
+.db-dot.ok{background:var(--green)}.db-dot.err{background:var(--red)}
+
+/* SELECT */
+#ss{background:var(--bg)}
+.body-pad{padding:2.5rem 1.75rem;max-width:980px;margin:0 auto}
+.sec-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:1.25rem}
+.select-hero{margin-bottom:2.5rem}
+.select-hero h2{font-family:var(--serif);font-size:2rem;font-weight:300;margin-bottom:.3rem}
+.select-hero p{font-size:14px;color:var(--text2)}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:2.5rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem}
+.stat-card .n{font-size:2rem;font-weight:700;line-height:1}
+.stat-card .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:.2rem}
+
+.disease-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1rem;margin-bottom:2.5rem}
+.dc{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:1.75rem;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;border-radius:inherit}
+.dc.skin::after{background:radial-gradient(circle at top left,var(--red-dim),transparent 60%)}
+.dc.gast::after{background:radial-gradient(circle at top left,var(--amber-dim),transparent 60%)}
+.dc.heart::after{background:radial-gradient(circle at top left,var(--blue-dim),transparent 60%)}
+.dc:hover{border-color:var(--border2);transform:translateY(-2px)}.dc:hover::after{opacity:1}
+.d-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem}
+.d-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.dc.skin .d-icon{background:var(--red-dim)}.dc.gast .d-icon{background:var(--amber-dim)}.dc.heart .d-icon{background:var(--blue-dim)}
+.d-tags{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem}
+.tag{font-size:10px;font-weight:600;letter-spacing:.05em;padding:.2rem .55rem;border-radius:5px;text-transform:uppercase}
+.tag-easy{background:var(--green-dim);color:var(--green)}.tag-medium{background:var(--amber-dim);color:var(--amber)}
+.tag-done{background:var(--purple-dim);color:var(--purple)}
+.dc h3{font-size:1.05rem;font-weight:600;margin-bottom:.3rem}
+.dc p{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:1.25rem}
+.d-footer{display:flex;align-items:center;justify-content:space-between;padding-top:1rem;border-top:1px solid var(--border)}
+.d-footer-info{font-size:12px;color:var(--text3)}
+.d-footer-score{font-size:12px;color:var(--purple);font-weight:600;margin-top:.15rem}
+.d-arrow{font-size:18px;color:var(--text3);transition:transform .2s,color .2s}
+.dc:hover .d-arrow{transform:translateX(4px);color:var(--text)}
+
+/* LEADERBOARD */
+.lb-section{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:2rem}
+.lb-row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);font-size:13px}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{font-size:12px;font-weight:700;color:var(--text3);text-align:center}
+.gold{color:#f5c842}.silver{color:#b0b8c4}.bronze{color:#c87941}
+.lb-name{font-weight:500}.lb-name small{display:block;font-size:11px;color:var(--text3);font-weight:400}
+.lb-score{font-weight:700;color:var(--purple)}
+.lb-empty{text-align:center;padding:1.5rem;font-size:13px;color:var(--text3)}
+
+/* CHAT */
+#sc{background:var(--bg)}
+.chat-bar{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.5rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.35rem .75rem;font-family:var(--font);font-size:13px;color:var(--text2);cursor:pointer;transition:background .15s}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.chat-info{flex:1}.chat-info h2{font-size:.95rem;font-weight:600}.chat-info p{font-size:11px;color:var(--text3)}
+.hint-btn{display:flex;align-items:center;gap:.4rem;background:var(--amber-dim);border:1px solid rgba(232,168,48,.25);border-radius:8px;padding:.45rem .85rem;font-family:var(--font);font-size:12px;font-weight:600;color:var(--amber);cursor:pointer;transition:background .15s;white-space:nowrap}
+.hint-btn:hover{background:rgba(232,168,48,.2)}.hint-btn:disabled{opacity:.35;cursor:not-allowed}
+.submit-btn{display:flex;align-items:center;gap:.4rem;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:8px;padding:.45rem .9rem;font-family:var(--font);font-size:12px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.submit-btn:hover{opacity:.85}
+
+.chat-layout{display:grid;grid-template-columns:1fr 265px;flex:1;overflow:hidden;min-height:0}
+.chat-win{display:flex;flex-direction:column;overflow:hidden}
+.msgs{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:.85rem}
+.msg{max-width:78%;font-size:14px;line-height:1.55}
+.msg .mi{padding:.75rem 1rem;border-radius:14px}
+.msg.pat{align-self:flex-start}.msg.pat .mi{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.stu{align-self:flex-end}.msg.stu .mi{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-bottom-right-radius:4px}
+.msg.sys{align-self:center;max-width:90%}.msg.sys .mi{background:var(--amber-dim);border:1px solid rgba(232,168,48,.2);color:var(--amber);font-size:12px;font-style:italic;border-radius:10px}
+.msg-lbl{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:.3rem}
+.typing{align-self:flex-start;display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;padding:.75rem 1rem}
+.typing.on{display:flex;align-items:center;gap:.5rem}
+.typing span{font-size:11px;color:var(--text3)}
+.dots{display:flex;gap:3px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--text3);animation:blink .9s ease-in-out infinite;display:block}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.inp-row{padding:1rem 1.25rem;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:.6rem;align-items:flex-end;flex-shrink:0}
+.inp-row textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.65rem 1rem;font-family:var(--font);font-size:14px;color:var(--text);resize:none;outline:none;min-height:42px;max-height:100px;line-height:1.5;transition:border-color .2s}
+.inp-row textarea:focus{border-color:var(--purple)}
+.inp-row textarea::placeholder{color:var(--text3)}
+.send-btn{background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;flex-shrink:0;transition:opacity .15s}
+.send-btn:hover{opacity:.8}
+
+.sym-panel{background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.pan-head{padding:1.1rem 1.25rem .75rem;border-bottom:1px solid var(--border)}
+.pan-head h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.sym-list-inner{padding:.5rem .75rem;flex:1}
+.si{display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .5rem;border-bottom:1px solid var(--border);font-size:12.5px;color:var(--text2);line-height:1.4;transition:color .3s}
+.si:last-child{border-bottom:none}
+.sbox{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .3s}
+.si.found .sbox{background:var(--green);border-color:var(--green);color:#fff}.si.found{color:var(--text);font-weight:500}
+.pb-wrap{padding:1rem 1.25rem;border-top:1px solid var(--border)}
+.pb-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:.4rem}
+.pb-labels strong{color:var(--text);font-weight:600}
+.pb-track{background:var(--bg3);border-radius:99px;height:5px;overflow:hidden}
+.pb-fill{height:100%;background:linear-gradient(90deg,var(--green),#7ee8a2);border-radius:99px;transition:width .4s ease}
+.mini-stats{padding:.75rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:space-around}
+.ms{text-align:center}.ms .n{font-size:1.3rem;font-weight:700}.ms .l{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+.overlay.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2rem;width:100%;max-width:440px}
+.modal h2{font-family:var(--serif);font-size:1.5rem;font-weight:300;margin-bottom:.4rem}
+.modal>p{font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.55}
+.modal select{width:100%;padding:.75rem 1rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;margin-bottom:1.25rem;cursor:pointer}
+.modal-btns{display:flex;gap:.75rem}
+.btn-c{flex:1;padding:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;color:var(--text2);cursor:pointer;transition:background .15s}
+.btn-c:hover{background:var(--surface2)}
+.btn-ok{flex:1;padding:.75rem;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-ok:hover{opacity:.88}
+
+/* SUMMARY */
+#ssum{background:var(--bg);align-items:center;justify-content:center;padding:2rem}
+.sum-wrap{max-width:540px;width:100%}
+.res-pill{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;border-radius:99px;font-size:12px;font-weight:600;margin-bottom:.85rem}
+.res-pill.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(76,175,125,.2)}
+.res-pill.fail{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,92,75,.2)}
+.res-head h2{font-family:var(--serif);font-size:2.2rem;font-weight:300;line-height:1.2;margin-bottom:.3rem}
+.res-head p{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+.score-hero{background:linear-gradient(135deg,rgba(155,127,232,.15),rgba(74,158,218,.1));border:1px solid rgba(155,127,232,.2);border-radius:18px;padding:2rem;text-align:center;margin-bottom:1.25rem}
+.score-hero .big{font-family:var(--serif);font-size:5rem;font-weight:300;line-height:1}
+.score-hero .out{font-size:1.5rem;color:var(--text3)}
+.score-hero .grd{margin-top:.5rem;font-size:13px;color:var(--text2)}
+.score-hero .grd strong{color:var(--purple)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem}
+.sc .l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.2rem}
+.sc .v{font-size:1.5rem;font-weight:700}.sc .s{font-size:11px;color:var(--text3);margin-top:.1rem}
+.reveal{background:var(--blue-dim);border:1px solid rgba(74,158,218,.2);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.reveal h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);margin-bottom:.35rem}
+.reveal p{font-size:13px;color:rgba(74,158,218,.9);line-height:1.6}
+.sum-acts{display:flex;gap:.75rem}
+.btn-ghost{flex:1;padding:.8rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;color:var(--text2);cursor:pointer;transition:background .15s}
+.btn-ghost:hover{background:var(--surface)}
+.btn-fill{flex:1;padding:.8rem;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:10px;font-family:var(--font);font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-fill:hover{opacity:.88}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:.75rem 1.1rem;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:200;transform:translateY(12px);opacity:0;transition:all .3s;max-width:260px;pointer-events:none}
+.toast.on{transform:translateY(0);opacity:1}.toast.sym{border-left:3px solid var(--green)}
+.loading{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:2rem;color:var(--text3);font-size:13px}
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+@media(max-width:680px){.chat-layout{grid-template-columns:1fr}.sym-panel{display:none}.disease-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="sw" class="screen active">
+  <div class="ww">
+    <div class="logo-row">
+      <div class="logo-icon">M+</div>
+      <h1>Medi<em>Train</em></h1>
+    </div>
+    <div class="welcome-hero">
+      <h2>Learn to <em>diagnose</em><br>like a doctor.</h2>
+      <p>Question AI patients, uncover hidden symptoms, and test your clinical reasoning in a safe simulation environment.</p>
+    </div>
+    <div class="form-card">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="inp-name" placeholder="e.g. Alex Nguyen" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Student ID</label>
+        <input type="text" id="inp-id" placeholder="e.g. S12345678" autocomplete="off">
+      </div>
+      <button class="btn-primary" onclick="startApp()">Start Training →</button>
+    </div>
+    <p class="welcome-note">Progress is saved to Firebase and accessible from any device.</p>
+  </div>
+</div>
+
+<!-- SELECT -->
+<div id="ss" class="screen">
+  <div class="top-bar">
+    <div class="brand"><div class="brand-icon">M+</div><span class="brand-name">MediTrain</span></div>
+    <div class="top-bar-right">
+      <div class="db-status"><div class="db-dot" id="db-dot"></div><span id="db-lbl">Connecting…</span></div>
+      <div class="student-pill">👤 <strong id="disp-name">—</strong></div>
+    </div>
+  </div>
+  <div class="body-pad">
+    <div class="stats-row">
+      <div class="stat-card"><div class="n" id="st-total">—</div><div class="l">Total Score</div></div>
+      <div class="stat-card"><div class="n" id="st-done">0/3</div><div class="l">Cases Done</div></div>
+      <div class="stat-card"><div class="n" id="st-avg">—</div><div class="l">Avg Score</div></div>
+      <div class="stat-card"><div class="n" id="st-rank">—</div><div class="l">Class Rank</div></div>
+    </div>
+
+    <p class="sec-label">Choose a Case</p>
+    <div class="disease-grid">
+      <div class="dc skin" onclick="startDisease('skin')">
+        <div class="d-top">
+          <div class="d-icon">🔴</div>
+          <div class="d-tags">
+            <span class="tag tag-easy">Easy</span>
+            <span class="tag tag-done hidden" id="dtag-skin">✓ Done</span>
+          </div>
+        </div>
+        <h3>Skin Cancer</h3>
+        <p>A patient visits with a changing mole they've been ignoring. Investigate through careful dermatological questioning.</p>
+        <div class="d-footer">
+          <div>
+            <div class="d-footer-info">5 symptoms to find</div>
+            <div class="d-footer-score hidden" id="dsc-skin"></div>
+          </div>
+          <div class="d-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="dc gast" onclick="startDisease('gast')">
+        <div class="d-top">
+          <div class="d-icon">🟡</div>
+          <div class="d-tags">
+            <span class="tag tag-easy">Easy</span>
+            <span class="tag tag-done hidden" id="dtag-gast">✓ Done</span>
+          </div>
+        </div>
+        <h3>Gastritis</h3>
+        <p>A patient complains of recurring digestive discomfort after meals. Identify the gastrointestinal symptom pattern.</p>
+        <div class="d-footer">
+          <div>
+            <div class="d-footer-info">5 symptoms to find</div>
+            <div class="d-footer-score hidden" id="dsc-gast"></div>
+          </div>
+          <div class="d-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="dc heart" onclick="startDisease('heart')">
+        <div class="d-top">
+          <div class="d-icon">🔵</div>
+          <div class="d-tags">
+            <span class="tag tag-medium">Medium</span>
+            <span class="tag tag-done hidden" id="dtag-heart">✓ Done</span>
+          </div>
+        </div>
+        <h3>Heart Disease</h3>
+        <p>A patient presents with exertional symptoms that may indicate cardiac involvement. Conduct a cardiovascular history.</p>
+        <div class="d-footer">
+          <div>
+            <div class="d-footer-info">6 symptoms to find</div>
+            <div class="d-footer-score hidden" id="dsc-heart"></div>
+          </div>
+          <div class="d-arrow">→</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sec-label">Class Leaderboard</p>
+    <div class="lb-section" id="lb-body"><div class="loading"><div class="spin"></div>Loading scores…</div></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="sc" class="screen">
+  <div class="chat-bar">
+    <button class="nav-btn" onclick="goSelect()">← Cases</button>
+    <div class="chat-info">
+      <h2 id="chat-title">Patient Consultation</h2>
+      <p id="chat-sub">Ask questions to uncover symptoms</p>
+    </div>
+    <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 Hint (<span id="hl">3</span>)</button>
+    <button class="submit-btn" onclick="openDx()">Submit Diagnosis →</button>
+  </div>
+  <div class="chat-layout">
+    <div class="chat-win">
+      <div class="msgs" id="msgs">
+        <div class="typing on" id="typ">
+          <span>Patient is typing</span>
+          <div class="dots"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="inp-row">
+        <textarea id="chat-inp" placeholder="Ask the patient a question…" rows="1" onkeydown="hk(event)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+    <div class="sym-panel">
+      <div class="pan-head"><h3>Symptom Checklist</h3></div>
+      <div class="sym-list-inner" id="sym-list"></div>
+      <div class="pb-wrap">
+        <div class="pb-labels"><span>Symptoms found</span><strong id="sym-c">0/0</strong></div>
+        <div class="pb-track"><div class="pb-fill" id="pbf" style="width:0%"></div></div>
+      </div>
+      <div class="mini-stats">
+        <div class="ms"><div class="n" id="msq">0</div><div class="l">Questions</div></div>
+        <div class="ms"><div class="n" id="msh">0</div><div class="l">Hints</div></div>
+        <div class="ms"><div class="n" id="mss">0</div><div class="l">Found</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIAGNOSIS MODAL -->
+<div class="overlay" id="mdx">
+  <div class="modal">
+    <h2>Your Diagnosis</h2>
+    <p>Based on your questioning, what condition does this patient have?</p>
+    <select id="dx-sel">
+      <option value="">— Select a diagnosis —</option>
+      <option value="skin">Skin Cancer (Melanoma)</option>
+      <option value="gast">Gastritis</option>
+      <option value="heart">Coronary Artery Disease</option>
+      <option value="asthma">Asthma</option>
+      <option value="diabetes">Type 2 Diabetes</option>
+      <option value="anxiety">Generalised Anxiety Disorder</option>
+      <option value="ibs">Irritable Bowel Syndrome</option>
+      <option value="migraine">Chronic Migraine</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn-c" onclick="closeDx()">Cancel</button>
+      <button class="btn-ok" onclick="submitDx()">Confirm →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="ssum" class="screen">
+  <div class="sum-wrap">
+    <div class="res-head">
+      <div class="res-pill" id="res-pill">—</div>
+      <h2 id="sum-title">Session Complete</h2>
+      <p id="sum-sub">—</p>
+    </div>
+    <div class="score-hero">
+      <div><span class="big" id="sc-big">—</span><span class="out">/100</span></div>
+      <div class="grd">Grade: <strong id="sc-grade">—</strong></div>
+    </div>
+    <div class="sum-grid">
+      <div class="sc"><div class="l">Symptoms Found</div><div class="v" id="sum-sym">—</div><div class="s" id="sum-sym-s">—</div></div>
+      <div class="sc"><div class="l">Questions Asked</div><div class="v" id="sum-q">—</div><div class="s">total</div></div>
+      <div class="sc"><div class="l">Hints Used</div><div class="v" id="sum-h">—</div><div class="s">of 3 allowed</div></div>
+      <div class="sc"><div class="l">Saved to DB</div><div class="v" id="sum-db">—</div><div class="s">Firebase</div></div>
+    </div>
+    <div class="reveal">
+      <h4 id="rev-title">Condition</h4>
+      <p id="rev-desc">—</p>
+    </div>
+    <div class="sum-acts">
+      <button class="btn-ghost" onclick="goSelect()">← All Cases</button>
+      <button class="btn-fill" onclick="goSelect()">Try Another →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,doc,setDoc,getDoc,collection,getDocs,query,orderBy,limit}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+/* ══════════════════════════════════════════
+   🔥 PASTE YOUR FIREBASE CONFIG HERE
+   Get it from: Firebase Console →
+   Project Settings → Your Apps → Web App
+══════════════════════════════════════════ */
+const cfg={
+  apiKey: "AIzaSyCM0z-tukrl_ucvOqEsQoyKgQeuN0sEBKA",
+  authDomain: "meditrain-44826.firebaseapp.com",
+  projectId: "meditrain-44826",
+  storageBucket: "meditrain-44826.firebasestorage.app",
+  messagingSenderId: "535682740355",
+  appId: "1:535682740355:web:f2070c2222c20bea752bb6"
+};
+
+let db=null,dbOk=false;
+try{
+  const app=initializeApp(cfg);
+  db=getFirestore(app);
+  dbOk=true;
+}catch(e){console.warn('Firebase offline',e)}
+
+function setDbUI(ok){
+  const d=document.getElementById('db-dot'),l=document.getElementById('db-lbl');
+  if(d)d.className='db-dot '+(ok?'ok':'err');
+  if(l)l.textContent=ok?'DB connected':'Offline mode';
+}
+setDbUI(dbOk);
+
+window.dbSave=async(sid,sname,disease,score,correct,symFound,symTotal,hints,qs)=>{
+  if(!dbOk)return false;
+  try{
+    const ref=doc(db,'students',sid);
+    const snap=await getDoc(ref);
+    const data=snap.exists()?snap.data():{name:sname,id:sid,scores:{},totalScore:0,completedCount:0};
+    data.scores[disease]={score,correct,symFound,symTotal,hints,qs,ts:Date.now()};
+    data.name=sname;
+    let tot=0,cnt=0;
+    for(const k in data.scores){tot+=data.scores[k].score;cnt++}
+    data.totalScore=tot;data.completedCount=cnt;data.avgScore=Math.round(tot/cnt);data.lastUpdated=Date.now();
+    await setDoc(ref,data);return true;
+  }catch(e){console.error(e);return false}
+};
+
+window.dbLoad=async(sid)=>{
+  if(!dbOk)return null;
+  try{const snap=await getDoc(doc(db,'students',sid));return snap.exists()?snap.data():null}catch{return null}
+};
+
+window.dbLeaderboard=async()=>{
+  if(!dbOk)return[];
+  try{
+    const q=query(collection(db,'students'),orderBy('totalScore','desc'),limit(10));
+    const snaps=await getDocs(q);return snaps.docs.map(d=>d.data());
+  }catch{return[]}
+};
+
+// Test the connection actually works by doing a real read
+try{
+  await getDoc(doc(db,'_ping','test'));
+  console.log('✅ Firebase connected and working');
+}catch(e){
+  console.error('❌ Firebase connection test failed:',e.message);
+  dbOk=false;setDbUI(false);
+}
+
+window._dbReady=true;window.dispatchEvent(new Event('db-ready'));
+</script>
+
+<script>
+/* ── DISEASE DATA ── */
+const D={
+  skin:{
+    name:'Skin Cancer',sub:'Dermatology · Easy',
+    syms:['Irregular mole shape','Skin discoloration','Itching or bleeding','Fatigue','Swollen lymph nodes'],
+    kw:[['mole','shape','irregular','asymmetr','border','grow'],['discolor','color','dark','pigment','patch','brown','black'],['itch','bleed','crust','sore','painful','scratch'],['tired','fatigue','exhaust','energy','weak'],['lymph','swollen','gland','lump','armpit','neck','bump']],
+    prompt:`You are a patient with skin cancer (melanoma) on your left forearm. Only reveal symptoms when asked relevant questions. NEVER say the disease name. Respond like a real, slightly anxious patient in 2-3 sentences max. Symptoms: a mole that has changed shape and darkened, occasional itching around it, feeling more tired lately, small lump in your armpit you noticed recently. Use everyday language.`,
+    reveal:'Melanoma is a skin cancer arising from melanocytes. Warning signs follow the ABCDEs: Asymmetry, irregular Border, multiple Colors, Diameter >6mm, and Evolution. Early detection dramatically improves prognosis.',
+    correct:'skin'
+  },
+  gast:{
+    name:'Gastritis',sub:'Gastroenterology · Easy',
+    syms:['Upper stomach pain','Nausea','Bloating','Loss of appetite','Burning sensation'],
+    kw:[['stomach','upper','epigast','pain','ache','cramp','belly','abdomen'],['nausea','sick','queasy','vomit','throw'],['bloat','full','distend','gassy','wind','swollen'],['appetite','hungry','eat','food','meal'],['burn','burning','acid','fire','warm','heat']],
+    prompt:`You are a patient with gastritis. You've had recurring stomach issues for 3 weeks, mainly after eating. Only reveal symptoms when asked. NEVER say the disease name. Respond like a mildly embarrassed, matter-of-fact patient in 2-3 sentences max. Symptoms: dull aching upper stomach pain after meals, frequent nausea, feeling bloated all day, no appetite, burning in your stomach. Use simple everyday language.`,
+    reveal:'Gastritis is inflammation of the stomach lining, most often caused by H. pylori infection, NSAID overuse, or alcohol. Key symptoms include epigastric pain, nausea, bloating, and loss of appetite. Diagnosed via gastroscopy and biopsy.',
+    correct:'gast'
+  },
+  heart:{
+    name:'Heart Disease',sub:'Cardiology · Medium',
+    syms:['Chest pain / tightness','Left arm heaviness','Shortness of breath','Dizziness','Fatigue','Irregular heartbeat'],
+    kw:[['chest','tight','pressure','squeezing','pain','heavy','angina'],['arm','left','heavy','shoulder','jaw','radiat'],['breath','short','breathless','wind','puff','sob','air'],['dizzy','lightheaded','faint','head spin','woozy'],['tired','fatigue','exhaust','energy','weak','worn'],['palpitat','flutter','irregular','fast','racing','beat','skip']],
+    prompt:`You are a 58-year-old patient with coronary artery disease. Only reveal symptoms when asked. NEVER say the disease name. Minimise symptoms at first but open up when pressed — 2-3 sentences max. Symptoms: tight chest pain on exertion (stairs, walking fast), left arm heaviness during episodes, easily breathless, occasional dizziness, afternoon fatigue, occasional heart flutters. Everyday language only.`,
+    reveal:'Coronary artery disease (CAD) narrows the coronary arteries via atherosclerosis, reducing myocardial blood flow. Classic presentation: exertional chest tightness radiating to the left arm or jaw, dyspnoea, and diaphoresis. Workup includes ECG, troponins, stress testing, and coronary angiography.',
+    correct:'heart'
+  }
+};
+
+/* ── STATE ── */
+const S={name:'',id:'',dis:null,msgs:[],found:[],qc:0,hu:0,hl:3,prog:{}};
+
+/* ── NAV ── */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+async function startApp(){
+  const n=document.getElementById('inp-name').value.trim();
+  const id=document.getElementById('inp-id').value.trim();
+  if(!n||!id){toast('Please enter your name and Student ID.');return}
+  S.name=n;S.id=id;
+  document.getElementById('disp-name').textContent=n;
+  show('ss');
+  const data=typeof window.dbLoad==='function'?await window.dbLoad(id):null;
+  if(data?.scores)S.prog=data.scores;
+  renderDash();
+  loadLB();
+}
+
+function goSelect(){closeDx();show('ss');renderDash();loadLB()}
+
+function renderDash(){
+  const keys=['skin','gast','heart'];let tot=0,done=0;
+  keys.forEach(k=>{
+    const p=S.prog[k];
+    const tag=document.getElementById('dtag-'+k);
+    const sc=document.getElementById('dsc-'+k);
+    if(p){done++;tot+=p.score;if(tag)tag.classList.remove('hidden');if(sc){sc.textContent='Last: '+p.score+'/100';sc.classList.remove('hidden')}}
+    else{if(tag)tag.classList.add('hidden');if(sc)sc.classList.add('hidden')}
+  });
+  document.getElementById('st-done').textContent=done+'/3';
+  document.getElementById('st-total').textContent=done?tot:'—';
+  document.getElementById('st-avg').textContent=done?Math.round(tot/done):'—';
+}
+
+async function loadLB(){
+  const el=document.getElementById('lb-body');
+  el.innerHTML='<div class="loading"><div class="spin"></div>Loading…</div>';
+  const rows=typeof window.dbLeaderboard==='function'?await window.dbLeaderboard():[];
+  if(!rows.length){el.innerHTML='<div class="lb-empty">No scores yet — be the first!</div>';document.getElementById('st-rank').textContent='—';return}
+  let myRank='—';
+  el.innerHTML=rows.map((r,i)=>{
+    const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const ri=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const me=r.id===S.id;if(me)myRank='#'+(i+1);
+    return`<div class="lb-row" style="${me?'background:var(--purple-dim);border-radius:8px;':''}">
+      <div class="lb-rank ${rc}">${ri}</div>
+      <div class="lb-name">${esc(r.name||'Anonymous')} ${me?'<em style="color:var(--purple);font-size:10px;">(you)</em>':''}
+        <small>${esc(r.id||'')} · ${r.completedCount||0}/3 cases</small></div>
+      <div class="lb-score">${r.totalScore||0} pts</div></div>`;
+  }).join('');
+  document.getElementById('st-rank').textContent=myRank;
+}
+
+/* ── DISEASE START ── */
+function startDisease(key){
+  S.dis=key;S.msgs=[];S.found=[];S.qc=0;S.hu=0;S.hl=3;
+  const d=D[key];
+  document.getElementById('chat-title').textContent=d.name;
+  document.getElementById('chat-sub').textContent=d.sub;
+  document.getElementById('hl').textContent=3;
+  document.getElementById('hint-btn').disabled=false;
+  document.getElementById('msq').textContent=0;
+  document.getElementById('msh').textContent=0;
+  document.getElementById('mss').textContent=0;
+  document.getElementById('sym-list').innerHTML=d.syms.map((s,i)=>
+    `<div class="si" id="si${i}"><div class="sbox" id="sb${i}"></div><span>${s}</span></div>`).join('');
+  updatePB();
+  document.getElementById('msgs').innerHTML=`<div class="typing on" id="typ"><span>Patient is typing</span><div class="dots"><i></i><i></i><i></i></div></div>`;
+  show('sc');
+  setTimeout(()=>{
+    const op="Oh hello, doctor. Thanks for seeing me. I've been having a few things going on — my GP thought it was worth coming in.";
+    addPat(op);S.msgs.push({role:'assistant',content:op});setTyp(false);
+  },900);
+}
+
+/* ── MESSAGING ── */
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}}
+
+async function sendMsg(){
+  const el=document.getElementById('chat-inp');
+  const txt=el.value.trim();if(!txt||!S.dis)return;
+  el.value='';addStu(txt);S.msgs.push({role:'user',content:txt});S.qc++;document.getElementById('msq').textContent=S.qc;setTyp(true);
+  try{
+    const r=await claude(S.msgs,D[S.dis].prompt);
+    setTyp(false);addPat(r);S.msgs.push({role:'assistant',content:r});checkSym(txt+' '+r);
+  }catch{setTyp(false);addPat("Sorry, I didn't catch that. Could you ask again?")}
+}
+
+async function useHint(){
+  if(S.hl<=0)return;S.hu++;S.hl--;
+  document.getElementById('hl').textContent=S.hl;document.getElementById('msh').textContent=S.hu;
+  if(S.hl===0)document.getElementById('hint-btn').disabled=true;
+  setTyp(true);
+  try{
+    const hm=[...S.msgs,{role:'user',content:"The student needs a hint. Mention something about your symptoms you almost forgot — keep it natural, don't name the condition."}];
+    const r=await claude(hm,D[S.dis].prompt);
+    setTyp(false);addSys('💡 Hint used — −10 points');addPat(r);
+    S.msgs.push({role:'user',content:'[hint requested]'});S.msgs.push({role:'assistant',content:r});checkSym(r);
+  }catch{setTyp(false);addPat("Oh, there is actually one more thing I should mention…")}
+}
+
+async function claude(messages, sys) {
+  // Calls our Python Flask server — API key is hidden safely in .env
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: sys, messages })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      console.error('Server error:', data);
+      return '⚠️ Server error: ' + (data.error || 'unknown');
+    }
+    return data.reply || '…';
+  } catch (e) {
+    console.error('Fetch failed:', e);
+    return '⚠️ Cannot reach server. Make sure server.py is running: python server.py';
+  }
+}
+
+/* ── RENDER ── */
+function addPat(t){ins(`<div class="msg-lbl">Patient</div><div class="mi">${esc(t)}</div>`,'pat')}
+function addStu(t){ins(`<div class="msg-lbl" style="text-align:right">You</div><div class="mi">${esc(t)}</div>`,'stu')}
+function addSys(t){ins(`<div class="mi">${esc(t)}</div>`,'sys')}
+function ins(html,cls){
+  const ma=document.getElementById('msgs'),ti=document.getElementById('typ');
+  const el=document.createElement('div');el.className='msg '+cls;el.innerHTML=html;
+  ma.insertBefore(el,ti);ma.scrollTop=ma.scrollHeight;
+}
+function setTyp(on){const t=document.getElementById('typ');if(t)t.classList.toggle('on',on)}
+
+/* ── SYMPTOMS ── */
+function checkSym(txt){
+  const d=D[S.dis],low=txt.toLowerCase();let ch=false;
+  d.kw.forEach((kws,i)=>{
+    if(S.found.includes(i))return;
+    if(kws.some(k=>low.includes(k))){S.found.push(i);ch=true;document.getElementById('si'+i)?.classList.add('found');document.getElementById('sb'+i).textContent='✓';toast('✅ Found: '+d.syms[i],true)}
+  });
+  if(ch)updatePB();
+}
+function updatePB(){
+  const d=D[S.dis];if(!d)return;const tot=d.syms.length,f=S.found.length;
+  document.getElementById('sym-c').textContent=f+'/'+tot;
+  document.getElementById('pbf').style.width=(f/tot*100).toFixed(0)+'%';
+  document.getElementById('mss').textContent=f;
+}
+
+/* ── DIAGNOSIS ── */
+function openDx(){document.getElementById('mdx').classList.add('on');document.getElementById('dx-sel').value=''}
+function closeDx(){document.getElementById('mdx').classList.remove('on')}
+async function submitDx(){
+  const sel=document.getElementById('dx-sel').value;
+  if(!sel){toast('Please select a diagnosis.');return}
+  closeDx();await showSum(sel);
+}
+
+async function showSum(dxKey){
+  const d=D[S.dis];const correct=dxKey===d.correct;
+  const tot=d.syms.length,f=S.found.length,missed=tot-f;
+  let score=100;if(!correct)score-=30;score-=missed*10;score-=S.hu*10;score=Math.max(0,score);
+  const grade=score>=85?'Distinction':score>=70?'Pass':score>=50?'Marginal Fail':'Fail';
+  S.prog[S.dis]={score,correct};
+
+  // Wait up to 3 seconds for Firebase module to be ready
+  let saved=false;
+  try{
+    if(typeof window.dbSave!=='function'){
+      await new Promise(res=>{
+        if(window._dbReady){res()}
+        else{window.addEventListener('db-ready',res,{once:true});setTimeout(res,3000)}
+      });
+    }
+    if(typeof window.dbSave==='function'){
+      console.log('💾 Saving to Firebase...',{id:S.id,name:S.name,disease:S.dis,score});
+      saved=await window.dbSave(S.id,S.name,S.dis,score,correct,f,tot,S.hu,S.qc);
+      console.log(saved?'✅ Saved to Firebase':'❌ Firebase save failed');
+    }else{
+      console.warn('dbSave not available — Firebase may not be configured');
+    }
+  }catch(e){console.error('Save error:',e)}
+
+  const pill=document.getElementById('res-pill');
+  pill.textContent=correct?'✅ Correct Diagnosis':'❌ Incorrect Diagnosis';
+  pill.className='res-pill '+(correct?'ok':'fail');
+  document.getElementById('sum-title').textContent=correct?'Well diagnosed!':'Not quite this time';
+  document.getElementById('sum-sub').textContent=correct?`You correctly identified ${d.name}. Great clinical reasoning.`:`The condition was ${d.name}. Review the symptoms and try again.`;
+  document.getElementById('sc-big').textContent=score;
+  document.getElementById('sc-grade').textContent=grade;
+  document.getElementById('sum-sym').textContent=f;
+  document.getElementById('sum-sym-s').textContent='out of '+tot+' symptoms';
+  document.getElementById('sum-q').textContent=S.qc;
+  document.getElementById('sum-h').textContent=S.hu;
+  document.getElementById('sum-db').textContent=saved?'✅ Saved':'⚠ Offline';
+  document.getElementById('rev-title').textContent='Condition: '+d.name;
+  document.getElementById('rev-desc').textContent=d.reveal;
+  show('ssum');
+}
+
+/* ── UTILS ── */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+let _tt;
+function toast(msg,sym=false){
+  clearTimeout(_tt);const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast on'+(sym?' sym':'');
+  _tt=setTimeout(()=>el.className='toast',3000);
+}
+
+window.addEventListener('db-ready',()=>{
+  document.getElementById('db-dot').className='db-dot ok';
+  document.getElementById('db-lbl').textContent='DB connected';
+});
+</script>
+</body>
+</html>
