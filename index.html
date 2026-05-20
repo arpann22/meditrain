@@ -238,7 +238,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="top-bar">
     <div class="brand"><div class="brand-icon">M+</div><span class="brand-name">MediTrain</span></div>
     <div class="top-bar-right">
-      <div class="db-status"><div class="db-dot" id="db-dot"></div><span id="db-lbl">Connecting…</span></div>
+      <!-- <div class="db-status"><div class="db-dot" id="db-dot"></div><span id="db-lbl">Connecting…</span></div> -->
       <div class="student-pill">👤 <strong id="disp-name">—</strong></div>
     </div>
   </div>
@@ -438,7 +438,7 @@ try{
 function setDbUI(ok){
   const d=document.getElementById('db-dot'),l=document.getElementById('db-lbl');
   if(d)d.className='db-dot '+(ok?'ok':'err');
-  if(l)l.textContent=ok?'DB connected':'Offline mode';
+  // if(l)l.textContent=ok?'DB connected':'Offline mode';
 }
 setDbUI(dbOk);
 
