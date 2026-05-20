@@ -217,7 +217,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="welcome-hero">
       <h2>Learn to <em>diagnose</em><br>like a doctor.</h2>
-      <p>Question AI patients, uncover hidden symptoms, and test your clinical reasoning in a safe simulation environment.</p>
+      <p>Question AI patients, uncover hidden symptoms, and test your clinical reasoning in a safe environment.</p>
     </div>
     <div class="form-card">
       <div class="field">
@@ -230,7 +230,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
       <button class="btn-primary" onclick="startApp()">Start Training →</button>
     </div>
-    <p class="welcome-note">Progress is saved to Firebase and accessible from any device.</p>
   </div>
 </div>
 
@@ -395,7 +394,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="sc"><div class="l">Symptoms Found</div><div class="v" id="sum-sym">—</div><div class="s" id="sum-sym-s">—</div></div>
       <div class="sc"><div class="l">Questions Asked</div><div class="v" id="sum-q">—</div><div class="s">total</div></div>
       <div class="sc"><div class="l">Hints Used</div><div class="v" id="sum-h">—</div><div class="s">of 3 allowed</div></div>
-      <div class="sc"><div class="l">Saved to DB</div><div class="v" id="sum-db">—</div><div class="s">Firebase</div></div>
+      <!-- <div class="sc"><div class="l">Saved to DB</div><div class="v" id="sum-db">—</div><div class="s">Firebase</div></div> -->
     </div>
     <div class="reveal">
       <h4 id="rev-title">Condition</h4>
@@ -583,7 +582,7 @@ function startDisease(key){
   document.getElementById('msgs').innerHTML=`<div class="typing on" id="typ"><span>Patient is typing</span><div class="dots"><i></i><i></i><i></i></div></div>`;
   show('sc');
   setTimeout(()=>{
-    const op="Oh hello, doctor. Thanks for seeing me. I've been having a few things going on — my GP thought it was worth coming in.";
+    const op="Oh hello, doctor. Thanks for seeing me. I've been having a few things going on, I thought it was worth coming in.";
     addPat(op);S.msgs.push({role:'assistant',content:op});setTyp(false);
   },900);
 }
@@ -723,7 +722,7 @@ function toast(msg,sym=false){
 
 window.addEventListener('db-ready',()=>{
   document.getElementById('db-dot').className='db-dot ok';
-  document.getElementById('db-lbl').textContent='DB connected';
+  // document.getElementById('db-lbl').textContent='DB connected';
 });
 </script>
 </body>
